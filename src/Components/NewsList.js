@@ -9,7 +9,7 @@ import {
 } from "react-bootstrap";
 
 const NewsList = (props) => {
-  const { category, searchTerm } = props;
+  const { category, searchTerm, onReadMore } = props;
 
   const [news, setNews] = useState([]);
   const [darkMode, setDarkMode] = useState(() => {
@@ -30,13 +30,28 @@ const NewsList = (props) => {
 
         const data = await response.json();
         setNews(data.articles || []);
+        localStorage.setItem("news", JSON.stringify(data.articles || []));
       } catch (error) {
         console.error("Error fetching news:", error);
-        setNews([]);
+        const storedNews = localStorage.getItem("news");
+        if (storedNews) {
+          setNews(JSON.parse(storedNews));
+        } else {
+          setNews([]);
+        }
       }
     };
 
-    fetchNews();
+    if (navigator.onLine) {
+      fetchNews();
+    } else {
+      const storedNews = localStorage.getItem("news");
+      if (storedNews) {
+        setNews(JSON.parse(storedNews));
+      } else {
+        setNews([]);
+      }
+    }
   }, [searchTerm, category]);
 
   useEffect(() => {
@@ -54,13 +69,11 @@ const NewsList = (props) => {
 
   const toggleDarkMode = () => setDarkMode((prevMode) => !prevMode);
 
-  const downloadNews = () => {
-    const jsonData = JSON.stringify(news, null, 2);
-    const blob = new Blob([jsonData], { type: "application/json" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "news_offline.json";
-    link.click();
+  const downloadArticle = (article) => {
+    const storedNews = JSON.parse(localStorage.getItem("news")) || [];
+    storedNews.push(article);
+    localStorage.setItem("news", JSON.stringify(storedNews));
+    alert("Article saved for offline use.");
   };
 
   return (
@@ -76,9 +89,6 @@ const NewsList = (props) => {
         >
           {darkMode ? "Light Mode" : "Dark Mode"}
         </ToggleButton>
-        <Button variant="primary" onClick={downloadNews}>
-          Download News
-        </Button>
       </div>
 
       <Row>
@@ -97,13 +107,15 @@ const NewsList = (props) => {
                 <Card.Body>
                   <Card.Title>{article.title}</Card.Title>
                   <Card.Text>{article.description}</Card.Text>
-                  <Card.Link
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Button variant="link" onClick={() => onReadMore(article)}>
                     Read more
-                  </Card.Link>
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => downloadArticle(article)}
+                  >
+                    Download
+                  </Button>
                 </Card.Body>
               </Card>
             </Col>

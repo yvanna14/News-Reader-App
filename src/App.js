@@ -9,22 +9,47 @@ import {
   Dropdown,
   Container,
 } from "react-bootstrap";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NewsList from "./Components/NewsList";
+import NewsDetail from "./Components/NewsDetail";
 
 function App() {
   const [category, setCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [news, setNews] = useState([]);
+  const [selectedNews, setSelectedNews] = useState(null);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      let url = `https://newsapi.org/v2/top-headlines?apiKey=YOUR_API_KEY`;
+      if (category) {
+        url += `&category=${category}`;
+      }
+      if (searchTerm) {
+        url += `&q=${searchTerm}`;
+      }
+      const response = await fetch(url);
+      const data = await response.json();
+      setNews(data.articles);
+    };
+    fetchNews();
+  }, [category, searchTerm]);
 
   const handleCategoryClick = (category) => {
     setCategory(category);
     setSearchTerm("");
+    setSelectedNews(null);
   };
 
   const handleSearch = (event) => {
     event.preventDefault();
     setCategory("");
     setSearchTerm(event.target.search.value);
+    setSelectedNews(null);
+  };
+
+  const handleReadMore = (newsItem) => {
+    setSelectedNews(newsItem);
   };
 
   return (
@@ -112,7 +137,11 @@ function App() {
           </Col>
 
           <Col xs={12} md={9}>
-            <NewsList category={category} searchTerm={searchTerm} />
+            {selectedNews ? (
+              <NewsDetail news={selectedNews} />
+            ) : (
+              <NewsList news={news} onReadMore={handleReadMore} />
+            )}
           </Col>
         </Row>
       </Container>
