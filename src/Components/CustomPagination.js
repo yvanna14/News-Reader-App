@@ -8,12 +8,12 @@ function CustomPagination(props) {
 
     for (let i = 1; i <= totalPages; i++) {
       pageItems.push(
-        <Pagination 
+        <Pagination.Item
         key= {i} 
         active={i === currentPage}
         onClick={() => handleCLick(i)}>
           {i}
-        </Pagination>
+        </Pagination.Item>
       );
     }
     return pageItems;

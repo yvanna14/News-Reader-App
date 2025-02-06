@@ -46,12 +46,12 @@ const NewsList = (props) => {
     alert("Article saved for offline use.");
   };
 
-  // ✅ Corrected pagination logic
+  // Corrected pagination logic
   const totalArticles = news.length;
   const totalPages = Math.ceil(totalArticles / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const currentArticles = news.slice(startIndex, endIndex); // ✅ Corrected
+  const currentArticles = news.slice(startIndex, endIndex); // 
 
   return (
     <Container
