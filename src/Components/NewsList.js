@@ -46,7 +46,6 @@ const NewsList = (props) => {
     alert("Article saved for offline use.");
   };
 
-  // Corrected pagination logic
   const totalArticles = news.length;
   const totalPages = Math.ceil(totalArticles / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
