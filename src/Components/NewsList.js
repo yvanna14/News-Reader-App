@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import useNewsData from "../hooks/useNewsData"; // Use as a hook
+import { useState, useEffect } from "react";
 import {
   Card,
   Container,
@@ -8,22 +7,13 @@ import {
   Button,
   ToggleButton,
 } from "react-bootstrap";
-import CustomPagination from "./CustomPagination";
 
-const NewsList = (props) => {
-  const { category, searchTerm, onReadMore } = props;
-
-  // Use custom hook to fetch news
-  const { news, loading } = useNewsData(category, searchTerm);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 4;
-  const handleClick = (pageNumber) => setCurrentPage(pageNumber); // ✅ Corrected function
-
+const NewsList = ({ news, onReadMore }) => {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem("darkMode") === "true";
   });
 
+  // Initialize dark mode based on time of day
   useEffect(() => {
     const hour = new Date().getHours();
     const isNight = hour >= 18 || hour < 6; // Dark mode after 6 PM
@@ -32,6 +22,7 @@ const NewsList = (props) => {
     }
   }, []);
 
+  // Apply dark mode to body and save preference
   useEffect(() => {
     document.body.classList.toggle("dark-mode", darkMode);
     localStorage.setItem("darkMode", darkMode);
@@ -46,11 +37,9 @@ const NewsList = (props) => {
     alert("Article saved for offline use.");
   };
 
-  const totalArticles = news.length;
-  const totalPages = Math.ceil(totalArticles / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const currentArticles = news.slice(startIndex, endIndex); // 
+  if (!news) {
+    return <p>Loading, please wait...</p>;
+  }
 
   return (
     <Container
@@ -59,63 +48,72 @@ const NewsList = (props) => {
     >
       <div className="d-flex justify-content-between align-items-center my-3">
         <ToggleButton
+          id="dark-mode-toggle"
+          type="checkbox"
           variant={darkMode ? "light" : "dark"}
           checked={darkMode}
           onChange={toggleDarkMode}
+          value="1"
         >
           {darkMode ? "Light Mode" : "Dark Mode"}
         </ToggleButton>
       </div>
 
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <Row>
-            {news.length > 0 ? (
-              currentArticles.map((article) => (
-                <Col xs={12} md={6} lg={4} key={article.url}>
-                  <Card
-                    className={
-                      darkMode
-                        ? "bg-secondary text-light"
-                        : "bg-white text-dark"
-                    }
+      <Row>
+        {news.length > 0 ? (
+          news.map((article, index) => (
+            <Col xs={12} md={6} lg={4} key={article.url || index}>
+              <Card
+                className={`mb-4 h-100 ${
+                  darkMode ? "bg-secondary text-light" : "bg-white text-dark"
+                }`}
+              >
+                <Card.Img
+                  src={article.image || "https://via.placeholder.com/300"}
+                  variant="top"
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/300";
+                  }}
+                  style={{ height: "200px", objectFit: "cover" }}
+                />
+                <Card.Body className="d-flex flex-column">
+                  <Card.Title>{article.title}</Card.Title>
+                  <Card.Text>{article.description}</Card.Text>
+                  <div className="mt-auto">
+                    <Button
+                      variant={darkMode ? "light" : "primary"}
+                      onClick={() => onReadMore(article)}
+                      className="me-2"
+                    >
+                      Read More
+                    </Button>
+                    <Button
+                      variant={darkMode ? "outline-light" : "outline-primary"}
+                      onClick={() => downloadArticle(article)}
+                    >
+                      Download
+                    </Button>
+                  </div>
+                </Card.Body>
+                {article.source && (
+                  <Card.Footer
+                    className={darkMode ? "text-light" : "text-muted"}
                   >
-                    <Card.Img
-                      src={article.image || "https://via.placeholder.com/300"}
-                      variant="top"
-                    />
-                    <Card.Body>
-                      <Card.Title>{article.title}</Card.Title>
-                      <Card.Text>{article.description}</Card.Text>
-                      <Button
-                        variant="link"
-                        onClick={() => onReadMore(article)}
-                      >
-                        Read more
-                      </Button>
-                      <Button
-                        variant="primary"
-                        onClick={() => downloadArticle(article)}
-                      >
-                        Download
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))
-            ) : (
-              <p>No news found.</p>
-            )}
-          </Row>
-          <CustomPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            handleClick={handleClick}
-          />
-        </>
-      )}
+                    Source: {article.source.name}
+                    <br />
+                    Published:{" "}
+                    {new Date(article.publishedAt).toLocaleDateString()}
+                  </Card.Footer>
+                )}
+              </Card>
+            </Col>
+          ))
+        ) : (
+          <Col>
+            <p className="text-center">No articles available.</p>
+          </Col>
+        )}
+      </Row>
     </Container>
   );
 };
