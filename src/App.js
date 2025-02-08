@@ -22,7 +22,7 @@ function App() {
   const [error, setError] = useState(null);
 
   // Replace with your actual API key
-  const API_KEY = "3dff60bc1c45a5d350d691ee0659d9d8";
+  const API_KEY = "d6d33713ee9935e619c48a63a345e8c5";
 
   const fetchNews = async (selectedCategory = "", searchQuery = "") => {
     setLoading(true);
